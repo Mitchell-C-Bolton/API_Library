@@ -96,16 +96,26 @@ async function updateAnimeInfo(url, animeName) { // Anime Info
 
 async function updateUSNextHoliday(url) { // US Holiday
     usNextHoliday.textContent = "Loading...";
+    let nextHoliday = null;
     const today = new Date();
 
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, "0");
-    const day = String(today.getDate()).padStart(2, "0");
+    const day = String(today.getDate() +1).padStart(2, "0");
 
-    console.log(year + "-" + month + "-" + day)
+    const todayDate = new Date(year + "-" + month + "-" + day);
 
-    const usNextHolidayData = await fetchData(url);
-    usNextHoliday.textContent = "Next US Holiday: " + usNextHolidayData;
+    const usNextHolidayData = await fetchData(url + year + '/us');
+
+    for ( const key in usNextHolidayData) {
+        const holidayDate = new Date(usNextHolidayData[key].date);
+
+        if ( todayDate < holidayDate ) {
+            nextHoliday = usNextHolidayData[key].localName;
+            break;
+        }
+    }
+    usNextHoliday.textContent = nextHoliday;
 }
 
 //Update Card Buttons
@@ -143,6 +153,3 @@ document.querySelectorAll('.nav-link').forEach(button => {
 });
 
 //Initialize
-updateWeather(weatherURL);
-updateCatFacts(catFactsURL);
-updateDogImage(dogImageURL);
