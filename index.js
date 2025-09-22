@@ -5,12 +5,16 @@ const dogImageButton = document.getElementById("dogImageButton");
 const animeInfoButton = document.getElementById("animeInfoButton");
 const usNextHolidayButton = document.getElementById("usNextHolidayButton");
 const authorWorksButton = document.getElementById("authorWorksButton");
+const jokeTextButton = document.getElementById("jokeTextButton");
+const triviaQuestionButton = document.getElementById("triviaQuestionButton");
 let seattleTemp = document.getElementById("seattleTemp");
 let catFacts = document.getElementById("catFacts");
 let dogImage = document.getElementById("dogImage");
 let animeInfo = document.getElementById("animeInfo");
 let animeName = document.getElementById("animeName");
 let usNextHoliday = document.getElementById("usNextHoliday");
+let jokeText = document.getElementById("jokeText");
+let triviaQuestion = document.getElementById("triviaQuestion");
 
 // API Links
 const weatherURL = "https://api.open-meteo.com/v1/forecast?latitude=47.6062&longitude=-122.3321&current=temperature_2m&timezone=Pacific%2FAuckland&forecast_days=1&wind_speed_unit=mph&temperature_unit=fahrenheit&precipitation_unit=inch";
@@ -18,11 +22,20 @@ const catFactsURL = "https://meowfacts.herokuapp.com/";
 const dogImageURL = "https://random.dog/woof.json";
 const animeInfoURL = "https://kitsu.io/api/edge/anime";
 const usNextHolidaysURL = "https://date.nager.at/api/v3/publicholidays/";
+const jokeTextURL = "https://geek-jokes.sameerkumar.website/api?format=json";
+const triviaQuestionURL = "https://opentdb.com/api.php?amount=1";
 
 // Fetch data Function
 async function fetchData(url) {
   try {
     const response = await fetch(url);
+
+    // ✅ Handle Too Many Requests
+    if (response.status === 429) {
+      console.warn("Rate limit reached (429). Please wait before trying again.");
+      return { results: [] }; // return safe fallback
+    }
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -119,6 +132,34 @@ async function updateUSNextHoliday(url) { // US Holiday
     usNextHoliday.textContent = nextHoliday;
 }
 
+async function updateJokeText(url) { // Jokes
+    jokeText.textContent = "Loading...";
+    const joke = await fetchData(url);
+    jokeText.textContent = "Joke: " + joke.joke;
+    console.log(joke);
+}
+
+async function updateTriviaQuestion(url) { // Trivia Question
+    triviaQuestion.textContent = "Loading...";
+    const trivia = await fetchData(url);
+
+    if (!trivia || !trivia.results || trivia.results.length === 0) {
+        triviaQuestion.textContent = "Please wait before asking another question.";
+        return;
+    }
+
+    // inline decoder for HTML entities
+    const decode = (text) => {
+        const txt = document.createElement("textarea");
+        txt.innerHTML = text;
+        return txt.value;
+    };
+
+    const question = decode(trivia.results[0].question);
+    triviaQuestion.textContent = "Trivia: " + question;
+    console.log(trivia);
+}
+
 //Update Card Buttons
 seattleTempButton.addEventListener("click", () => { // Weather
     updateWeather(weatherURL);
@@ -143,6 +184,16 @@ animeInfoButton.addEventListener("click", () => { // Anime Info
 usNextHolidayButton.addEventListener("click", () => { // Next Holiday
     updateUSNextHoliday(usNextHolidaysURL);
     console.log("Next Holiday Updated");
+});
+
+jokeTextButton.addEventListener("click", () => { // Jokes
+    updateJokeText(jokeTextURL);
+    console.log("New joke given");
+});
+
+triviaQuestionButton.addEventListener("click", () => { // Trivia Question
+    updateTriviaQuestion(triviaQuestionURL);
+    console.log("New trivia given");
 });
 
 // Navbar message
