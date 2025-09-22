@@ -4,6 +4,7 @@ const catFactsButton = document.getElementById("catFactsButton");
 const dogImageButton = document.getElementById("dogImageButton");
 const animeInfoButton = document.getElementById("animeInfoButton");
 const usNextHolidayButton = document.getElementById("usNextHolidayButton");
+const authorWorksButton = document.getElementById("authorWorksButton");
 let seattleTemp = document.getElementById("seattleTemp");
 let catFacts = document.getElementById("catFacts");
 let dogImage = document.getElementById("dogImage");
@@ -12,11 +13,11 @@ let animeName = document.getElementById("animeName");
 let usNextHoliday = document.getElementById("usNextHoliday");
 
 // API Links
-weatherURL = "https://api.open-meteo.com/v1/forecast?latitude=47.6062&longitude=-122.3321&current=temperature_2m&timezone=Pacific%2FAuckland&forecast_days=1&wind_speed_unit=mph&temperature_unit=fahrenheit&precipitation_unit=inch";
-catFactsURL = "https://meowfacts.herokuapp.com/";
-dogImageURL = "https://random.dog/woof.json";
-animeInfoURL = "https://kitsu.io/api/edge/anime";
-usNextHolidaysURL = "https://date.nager.at/api/v3/publicholidays/"
+const weatherURL = "https://api.open-meteo.com/v1/forecast?latitude=47.6062&longitude=-122.3321&current=temperature_2m&timezone=Pacific%2FAuckland&forecast_days=1&wind_speed_unit=mph&temperature_unit=fahrenheit&precipitation_unit=inch";
+const catFactsURL = "https://meowfacts.herokuapp.com/";
+const dogImageURL = "https://random.dog/woof.json";
+const animeInfoURL = "https://kitsu.io/api/edge/anime";
+const usNextHolidaysURL = "https://date.nager.at/api/v3/publicholidays/";
 
 // Fetch data Function
 async function fetchData(url) {
