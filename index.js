@@ -7,6 +7,8 @@ const usNextHolidayButton = document.getElementById("usNextHolidayButton");
 const authorWorksButton = document.getElementById("authorWorksButton");
 const jokeTextButton = document.getElementById("jokeTextButton");
 const triviaQuestionButton = document.getElementById("triviaQuestionButton");
+const dictionaryWordButton = document.getElementById("dictionaryWordButton");
+const countryLookupButton = document.getElementById("countryLookupButton");
 let seattleTemp = document.getElementById("seattleTemp");
 let catFacts = document.getElementById("catFacts");
 let dogImage = document.getElementById("dogImage");
@@ -15,6 +17,10 @@ let animeName = document.getElementById("animeName");
 let usNextHoliday = document.getElementById("usNextHoliday");
 let jokeText = document.getElementById("jokeText");
 let triviaQuestion = document.getElementById("triviaQuestion");
+let dictionaryInfo = document.getElementById("dictionaryInfo");
+let dictionaryWord = document.getElementById("dictionaryWord");
+let countryLookup = document.getElementById("countryLookup");
+let countryLookupInput = document.getElementById("countryLookupInput");
 
 // API Links
 const weatherURL = "https://api.open-meteo.com/v1/forecast?latitude=47.6062&longitude=-122.3321&current=temperature_2m&timezone=Pacific%2FAuckland&forecast_days=1&wind_speed_unit=mph&temperature_unit=fahrenheit&precipitation_unit=inch";
@@ -24,6 +30,8 @@ const animeInfoURL = "https://kitsu.io/api/edge/anime";
 const usNextHolidaysURL = "https://date.nager.at/api/v3/publicholidays/";
 const jokeTextURL = "https://geek-jokes.sameerkumar.website/api?format=json";
 const triviaQuestionURL = "https://opentdb.com/api.php?amount=1";
+const dictionaryInfoURL = "https://api.dictionaryapi.dev/api/v2/entries/en/";
+const countryLookupURL = "https://restcountries.com/v3.1/name/";
 
 // Fetch data Function
 async function fetchData(url) {
@@ -49,7 +57,7 @@ async function fetchData(url) {
 
 //Update card functions
 async function updateWeather(url) { // Weather
-    seattleTemp.textContent = "Loadaing...";
+    seattleTemp.textContent = "Loading...";
     const weatherData = await fetchData(url);
     seattleTemp.textContent = "Temperature: " + weatherData.current.temperature_2m + 'F';
 }
@@ -60,11 +68,15 @@ async function updateCatFacts(url) { // Cat Fact
     catFacts.textContent = "Cat fact: " + catData.data;
 }
 
-async function updateDogImage(url) { // Dog Image
+async function updateDogImage(url, retries = 5) { // Dog Image
     dogImage.src = "";
     const dogImageData = await fetchData(url);
 
-    // only allow "images"
+    if (!dogImageData) {
+        dogImage.alt = "Error fetching dog image.";
+        return;
+    }
+
     const validExtensions = [".jpg", ".jpeg", ".png", ".gif"];
     const fileUrl = dogImageData.url;
 
@@ -72,9 +84,12 @@ async function updateDogImage(url) { // Dog Image
         dogImage.src = fileUrl;
         dogImage.alt = "A random dog";
     } else {
-        // retry if not an image
         console.log("Non-image returned, retrying...");
-        updateDogImage(url);
+        if (retries > 0) {
+            updateDogImage(url, retries - 1);
+        } else {
+            dogImage.alt = "No valid image found after several tries.";
+        }
     }
 }
 
@@ -104,8 +119,7 @@ async function updateAnimeInfo(url, animeName) { // Anime Info
         "Unknown title";
     const synopsis = attrs.synopsis || "No synopsis available.";
 
-    animeInfo.textContent = data.data[0].attributes.canonicalTitle + ": "
-    animeInfo.textContent += data.data[0].attributes.synopsis
+    animeInfo.textContent = `${title}: ${synopsis}`;
 }
 
 async function updateUSNextHoliday(url) { // US Holiday
@@ -148,7 +162,6 @@ async function updateTriviaQuestion(url) { // Trivia Question
         return;
     }
 
-    // inline decoder for HTML entities
     const decode = (text) => {
         const txt = document.createElement("textarea");
         txt.innerHTML = text;
@@ -158,6 +171,66 @@ async function updateTriviaQuestion(url) { // Trivia Question
     const question = decode(trivia.results[0].question);
     triviaQuestion.textContent = "Trivia: " + question;
     console.log(trivia);
+}
+
+async function updateDictionaryInfo(url, dictionaryWord) { // Dictionary Lookup
+    dictionaryInfo.textContent = "Loading...";
+    
+    const q = (dictionaryWord?.value ?? url?.textContent ?? "").trim();
+    if (!q) {
+        dictionaryInfo.textContent = "Please enter a word.";
+        return;
+    }
+
+    const baseUrl = typeof url === "string" ? url : url?.textContent ?? "";
+    const completeURL = `${baseUrl}${encodeURIComponent(q)}`;
+
+ try {
+        const data = await fetchData(completeURL);
+
+        if (!data || !Array.isArray(data) || data.length === 0) {
+            dictionaryInfo.textContent = `No results found for "${q}".`;
+            return;
+        }
+        
+        dictionaryInfo.textContent = data[0].meanings[0].definitions[0].definition;
+
+    } catch (err) {
+        console.error(err);
+        dictionaryInfo.textContent = "Error fetching dictionary data.";
+    }
+}
+
+async function updateCountryInfo(url, countryName) { // Country Look-up
+    countryLookup.textContent = "Loading...";
+
+    const q = (countryName?.value ?? url?.textContent ?? "").trim();
+        if (!q) {
+        countryLookup.textContent = "Please enter a country.";
+        return;
+    }
+
+    const baseUrl = typeof url === "string" ? url : url?.textContent ?? "";
+    const completeURL = `${baseUrl}${encodeURIComponent(q)}`;
+
+    try {
+        const data = await fetchData(completeURL);
+        console.log(data[0].capital[0]);
+        countryLookup.textContent = data[0].capital[0];
+
+        if (!data || !Array.isArray(data) || data.length === 0) {
+            countryLookup.textContent = `No results found for "${q}".`;
+            return;
+        }
+
+    } catch (err) {
+        console.error(err);
+        countryLookup.textContent = "Error fetching country.";
+    }
+
+    
+
+    
 }
 
 //Update Card Buttons
@@ -196,6 +269,16 @@ triviaQuestionButton.addEventListener("click", () => { // Trivia Question
     console.log("New trivia given");
 });
 
+dictionaryWordButton.addEventListener("click", () => { // Dictionary lookup
+    updateDictionaryInfo(dictionaryInfoURL, dictionaryWord);
+    console.log("Word looked up");
+});
+
+countryLookupButton.addEventListener("click", () => { // Country look-up
+    updateCountryInfo(countryLookupURL, countryLookupInput);
+    console.log("Country looked up");
+});
+
 // Navbar message
 document.querySelectorAll('.nav-link').forEach(button => {
     button.addEventListener('click', function(event) {
@@ -205,3 +288,9 @@ document.querySelectorAll('.nav-link').forEach(button => {
 });
 
 //Initialize
+    updateWeather(weatherURL);
+    updateCatFacts(catFactsURL);
+    updateDogImage(dogImageURL);
+    updateUSNextHoliday(usNextHolidaysURL);
+    updateJokeText(jokeTextURL);
+    updateTriviaQuestion(triviaQuestionURL);
